@@ -1,3 +1,15 @@
+# Ignore all .log files
+*.log
+
+# Ignore all .log files
+*.env
+
+# Ignore the node_modules directory
+node_modules/
+
+# Ignore all files in the temp directory
+temp/
+
 # Logs
 logs
 *.log
@@ -11,8 +23,6 @@ node_modules
 dist
 dist-ssr
 *.local
-.env
-.env.*.local
 
 # Editor directories and files
 .vscode/*
