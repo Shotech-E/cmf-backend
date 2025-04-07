@@ -18,7 +18,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(
   cors({
-    origin: "cmf-frontend.vercel.app",
+    origin: "http://localhost:5173",
     credentials: true,
   })
 );
