@@ -16,12 +16,30 @@ app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use(
-  cors({
-    origin: "http://localhost:5173",
-    credentials: true,
-  })
-);
+// app.use(
+//   cors({
+//     origin: "http://localhost:5173",
+//     credentials: true,
+//   })
+// );
+// Add CSP headers
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: [
+        "'self'",
+        "'unsafe-inline'", // Only if you need inline scripts
+        "blob:", // Allow blob URLs
+        "https://cmf-backend-iota.vercel.app" // Your Vercel domain
+      ],
+      connectSrc: [
+        "'self'",
+        "https://cmf-backend-iota.vercel.app"
+      ]
+    }
+  }
+}));
 
 // All Routes
 const memberRoute = require("./src/members/memberRoute"); // Import the route
