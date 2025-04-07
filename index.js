@@ -2,63 +2,80 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const bodyParser = require("body-parser");
-
-const app = express();
+const helmet = require("helmet"); // Added missing helmet import
 require("dotenv").config();
 
-const port = process.env.PORT || 5000;
+const app = express();
 
-// middlewares
-app.use(express.json({ limit: "25mb" }));
-app.use(express.urlencoded({ limit: "25mb", extended: true }));
-app.use(cookieParser());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
-// app.use(
-//   cors({
-//     origin: "http://localhost:5173",
-//     credentials: true,
-//   })
-// );
-// Add CSP headers
+// Middlewares
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: [
         "'self'",
-        "'unsafe-inline'", // Only if you need inline scripts
-        "blob:", // Allow blob URLs
-        "https://cmf-backend-iota.vercel.app" // Your Vercel domain
+        "'unsafe-inline'",
+        "blob:",
+        `https://${process.env.VERCEL_URL || 'cmf-backend-iota.vercel.app'}`
       ],
       connectSrc: [
         "'self'",
-        "https://cmf-backend-iota.vercel.app"
+        `https://${process.env.VERCEL_URL || 'cmf-backend-iota.vercel.app'}`
       ]
     }
   }
 }));
 
-// All Routes
-const memberRoute = require("./src/members/memberRoute"); // Import the route
+app.use(express.json({ limit: "25mb" }));
+app.use(express.urlencoded({ limit: "25mb", extended: true }));
+app.use(cookieParser());
 
-// Use the route
-app.use("/api/auth", memberRoute); // Mount memberRoute at /api/auth
+// Enable CORS for Vercel deployment
+app.use(cors({
+  origin: process.env.FRONTEND_URL || "http://localhost:5173",
+  credentials: true
+}));
 
-main()
-  .then(() => console.log("Database connected"))
-  .catch((err) => console.log(err));
-async function main() {
-  await mongoose.connect(process.env.DB_URL);
-
-  app.get("/", (req, res) => {
-    res.send("Welcome to CMF!");
-  });
+// Database connection
+async function connectDB() {
+  try {
+    await mongoose.connect(process.env.DB_URL);
+    console.log("Database connected");
+  } catch (err) {
+    console.error("Database connection error:", err);
+    process.exit(1);
+  }
 }
 
-// Start the server
-app.listen(port, () => {
-  console.log(`Server started on port ${port}`);
+// Routes
+const memberRoute = require("./src/members/memberRoute");
+app.use("/api/auth", memberRoute);
+
+// Health check endpoint
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "healthy" });
 });
+
+// Root endpoint
+app.get("/", (req, res) => {
+  res.send("Welcome to CMF API");
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: "Internal Server Error" });
+});
+
+// For Vercel deployment
+module.exports = app;
+
+// Local development server
+if (require.main === module) {
+  const port = process.env.PORT || 5000;
+  connectDB().then(() => {
+    app.listen(port, () => {
+      console.log(`Server running on port ${port}`);
+    });
+  });
+}
