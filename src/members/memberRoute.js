@@ -2,6 +2,17 @@ const express = require("express");
 const Member = require("./memberModel");
 const router = express.Router();
 
+// Get All Members Endpoint
+router.get("/members", async (req, res) => {
+  try {
+    const members = await Member.find({}, "id name dateOfBirth residentialAddress phoneNumber email maritalStatus marriageDate occupation officeAddress society activityGroup").sort({ createdAt: -1 });
+    res.status(200).send(members);
+  } catch (error) {
+    console.log("Error in getting members", error);
+    res.status(500).send({ message: "Error in getting members" });
+  }
+});
+
 // Register Endpoint
 router.post("/add_member", async (req, res) => {
   try {
@@ -27,17 +38,6 @@ router.delete("/members/:id", async (req, res) => {
   } catch (error) {
     console.log("Error in deleting member", error);
     res.status(500).send({ message: "Error in deleting member" });
-  }
-});
-
-// Get All Members Endpoint
-router.get("/members", async (req, res) => {
-  try {
-    const members = await Member.find({}, "id name dateOfBirth residentialAddress phoneNumber email maritalStatus marriageDate occupation officeAddress society activityGroup").sort({ createdAt: -1 });
-    res.status(200).send(members);
-  } catch (error) {
-    console.log("Error in getting members", error);
-    res.status(500).send({ message: "Error in getting members" });
   }
 });
 
