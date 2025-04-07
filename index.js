@@ -74,12 +74,8 @@ async function connectDB() {
 const memberRoute = require("./src/members/memberRoute");
 
 // use the route
-app.use("/api/auth", memberRoute);
+app.use("/api/member", memberRoute);
 
-// Health check endpoint
-app.get("/health", (req, res) => {
-  res.status(200).json({ status: "healthy" });
-});
 
 // Root endpoint
 app.get("/", (req, res) => {
