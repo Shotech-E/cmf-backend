@@ -37,10 +37,33 @@ app.use(cors({
 }));
 
 // Database connection
+// DB connection with timeout and connection pooling
 async function connectDB() {
+  const options = {
+    serverSelectionTimeoutMS: 5000, // 5 seconds for initial connection
+    socketTimeoutMS: 30000, // 30 seconds for operations
+    maxPoolSize: 10, // Connection pool size
+    retryWrites: true,
+    w: 'majority'
+  };
+
   try {
-    await mongoose.connect(process.env.DB_URL);
+    await mongoose.connect(process.env.DB_URL, options);
     console.log("Database connected");
+    
+    // Connection event listeners
+    mongoose.connection.on('connected', () => {
+      console.log('Mongoose connected to DB');
+    });
+    
+    mongoose.connection.on('error', (err) => {
+      console.error('Mongoose connection error:', err);
+    });
+    
+    mongoose.connection.on('disconnected', () => {
+      console.log('Mongoose disconnected');
+    });
+    
   } catch (err) {
     console.error("Database connection error:", err);
     process.exit(1);
@@ -49,7 +72,13 @@ async function connectDB() {
 
 // Routes
 const memberRoute = require("./src/members/memberRoute");
+
+// use the route
 app.use("/api/auth", memberRoute);
+app.use('/api/auth/members', timeout('10s'));
+app.use('/api/auth/members', (req, res, next) => {
+  if (!req.timedout) next();
+});
 
 // Health check endpoint
 app.get("/health", (req, res) => {
