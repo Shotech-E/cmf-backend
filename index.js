@@ -75,10 +75,6 @@ const memberRoute = require("./src/members/memberRoute");
 
 // use the route
 app.use("/api/auth", memberRoute);
-app.use('/api/auth/members', timeout('10s'));
-app.use('/api/auth/members', (req, res, next) => {
-  if (!req.timedout) next();
-});
 
 // Health check endpoint
 app.get("/health", (req, res) => {
