@@ -32,7 +32,7 @@ app.use(cookieParser());
 
 // Enable CORS for Vercel deployment
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "https://cmf-frontend-one.vercel.app",
+  origin: process.env.FRONTEND_URL || "",
   credentials: true
 }));
 
