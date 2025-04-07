@@ -74,7 +74,7 @@ async function connectDB() {
 const memberRoute = require("./src/members/memberRoute");
 
 // use the route
-app.use("/api/member", memberRoute);
+app.use("/api/auth", memberRoute);
 
 
 // Root endpoint
