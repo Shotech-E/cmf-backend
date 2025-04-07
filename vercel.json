@@ -9,10 +9,14 @@
   "routes": [
     {
       "src": "/(.*)",
+<<<<<<< HEAD
       "dest": "/index.js",
       "headers": {
         "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' blob: https://cmf-backend-iota.vercel.app; connect-src 'self' https://cmf-backend-iota.vercel.app;"
       }
+=======
+      "dest": "/index.js"
+>>>>>>> ce40860fb7150e023466ab99330bed30c4378834
     }
   ]
 }
