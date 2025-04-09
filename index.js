@@ -45,7 +45,6 @@ app.use(cookieParser());
 app.use(cors({
   origin: [
     "https://cmf-frontend.vercel.app",
-    "http://localhost:5173" // For local development
   ],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
