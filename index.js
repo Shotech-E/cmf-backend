@@ -2,45 +2,91 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const bodyParser = require("body-parser");
-
-const app = express();
+const helmet = require("helmet"); // Add helmet for security headers
 require("dotenv").config();
 
+const app = express();
 const port = process.env.PORT || 5000;
 
-// middlewares
+// Security Middleware
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: [
+        "'self'",
+        "'unsafe-inline'", // Required for some frontend frameworks
+        "blob:", // Allow blob URLs
+        "https://cmf-frontend.vercel.app",
+        "https://cmf-backend-iota.vercel.app"
+      ],
+      connectSrc: [
+        "'self'",
+        "https://cmf-frontend.vercel.app",
+        "https://cmf-backend-iota.vercel.app"
+      ],
+      imgSrc: ["'self'", "data:", "blob:"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      frameSrc: ["'none'"]
+    }
+  },
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
+
+// Other Middleware
 app.use(express.json({ limit: "25mb" }));
 app.use(express.urlencoded({ limit: "25mb", extended: true }));
 app.use(cookieParser());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use(
-  cors({
-    origin: "https://cmf-frontend.vercel.app",
-    credentials: true,
-  })
-);
+// CORS Configuration
+app.use(cors({
+  origin: [
+    "https://cmf-frontend.vercel.app",
+    "http://localhost:5173" // For local development
+  ],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
 
-// All Routes
-const memberRoute = require("./src/members/memberRoute"); // Import the route
+// Handle preflight requests
+app.options("*", cors());
 
-// Use the route
-app.use("/api/auth", memberRoute); // Mount userRoute at /api/auth
+// Routes
+const memberRoute = require("./src/members/memberRoute");
+app.use("/api/auth", memberRoute);
 
-main()
-  .then(() => console.log("Database connected"))
-  .catch((err) => console.log(err));
+// Database Connection
 async function main() {
-  await mongoose.connect(process.env.DB_URL);
-
-  app.get("/", (req, res) => {
-    res.send("CMF Backend is running!");
-  });
+  try {
+    await mongoose.connect(process.env.DB_URL, {
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 30000,
+      maxPoolSize: 10
+    });
+    console.log("Database connected");
+  } catch (err) {
+    console.error("Database connection error:", err);
+    process.exit(1);
+  }
 }
 
-// Start the server
-app.listen(port, () => {
-  console.log(`Server started on port ${port}`);
+// Health Check
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "healthy" });
+});
+
+// Start Server
+main().then(() => {
+  app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+  });
+});
+
+// Error Handling
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: "Internal Server Error" });
 });
